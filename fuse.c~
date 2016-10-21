@@ -17,7 +17,6 @@ static struct options {
 	const char *contents;
 	int show_help;
 } options;
-
 enum fuse_readdir_flags {
 	FUSE_READDIR_PLUS = (1 << 0),
 };
@@ -121,6 +120,17 @@ static int hello_getdir(const char *path, fuse_dirh_t h, fuse_dirfil_t filler)
     return res;
 }
 
+static int hello_mknod(const char *path, mode_t mode, dev_t rdev)
+{
+    int res;
+
+    res = mknod(path, mode, rdev);
+    if(res == -1)
+        return -errno;
+
+    return 0;
+}
+
 static int hello_mkdir(const char *path, mode_t mode)
 {
     int res;
@@ -210,6 +220,7 @@ static struct fuse_operations hello_oper = {
 	.getattr	= hello_getattr,
 	.getdir	= hello_getdir,
 	.readdir = hello_readdir,
+	.mknod	= hello_mknod,
 	.mkdir	= hello_mkdir,
 	.unlink	= hello_unlink,
 	.rmdir	= hello_rmdir,
@@ -241,7 +252,7 @@ int main(int argc, char *argv[])
 	/* Set defaults -- we have to use strdup so that
 	   fuse_opt_parse can free the defaults if other
 	   values are specified */
-	options.filename = strdup("fhello");
+	options.filename = strdup("folder");
 	options.contents = strdup("Hello World!\n");
 
 	/* Parse options */
