@@ -31,233 +31,361 @@ static const struct fuse_opt option_spec[] = {
 	FUSE_OPT_END
 };
 
-static int hello_getattr(const char *path, struct stat *stbuf)
-{
-	int res = 0;
+#define FILENAME "/tmp/custom_fs"
+#define DIR_AMOUNT 1000
 
-	memset(stbuf, 0, sizeof(struct stat));
-	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-	} else if (strcmp(path+1, options.filename) == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = strlen(options.contents);
-	} else
-		res = -ENOENT;
+int current_dir_amount = 0;
 
-	return res;
-}
+FILE *log_file;
 
-static int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-			 off_t offset, struct fuse_file_info *fi,
-			 enum fuse_readdir_flags flags)
-{
-	(void) offset;
-	(void) fi;
-	(void) flags;
-	
-
-	filler(buf, ".", NULL, 0);
-	filler(buf, "..", NULL, 0);
-
-	if (strcmp(path, "/") == 0) {
-		filler(buf, "folder1", NULL, 0);
-		filler(buf, "folder2", NULL, 0);
-	}
-
-	filler(buf, options.filename, NULL, 0);
-
-	return 0;
-}
-
-static int hello_open(const char *path, struct fuse_file_info *fi)
-{
-	if (strcmp(path+1, options.filename) != 0)
-		return -ENOENT;
-
-	if ((fi->flags & 3) != O_RDONLY)
-		return -EACCES;
-
-	return 0;
-}
-
-static int hello_read(const char *path, char *buf, size_t size, off_t offset,
-		      struct fuse_file_info *fi)
-{
-	size_t len;
-	(void) fi;
-	if(strcmp(path+1, options.filename) != 0)
-		return -ENOENT;
-
-	len = strlen(options.contents);
-	if (offset < len) {
-		if (offset + size > len)
-			size = len - offset;
-		memcpy(buf, options.contents + offset, size);
-	} else
-		size = 0;
-
-	return size;
-}
-
-static int hello_getdir(const char *path, fuse_dirh_t h, fuse_dirfil_t filler)
-{
-    DIR *dp;
-    struct dirent *de;
-    int res = 0;
-
-    dp = opendir(path);
-    if(dp == NULL)
-        return -errno;
-
-    while((de = readdir(dp)) != NULL) {
-        res = filler(h, de->d_name, de->d_type, 0);
-        if(res != 0)
-            break;
-    }
-
-    closedir(dp);
-    return res;
-}
-
-static int hello_mkdir(const char *path, mode_t mode)
-{
-    int res;
-
-    res = mkdir(path, mode);
-    if(res == -1)
-        return -errno;
-
-    return 0;
-}
-
-static int hello_unlink(const char *path)
-{
-    int res;
-
-    res = unlink(path);
-    if(res == -1)
-        return -errno;
-
-    return 0;
-}
-
-static int hello_rmdir(const char *path)
-{
-    int res;
-
-    res = rmdir(path);
-    if(res == -1)
-        return -errno;
-
-    return 0;
-}
-
-static int hello_rename(const char *from, const char *to)
-{
-    int res;
-
-    res = rename(from, to);
-    if(res == -1)
-        return -errno;
-
-    return 0;
-}
-
-static int hello_link(const char *from, const char *to)
-{
-    int res;
-
-    res = link(from, to);
-    if(res == -1)
-        return -errno;
-
-    return 0;
-}
-
-static int hello_truncate(const char *path, off_t size)
-{
-    int res;
-    
-    res = truncate(path, size);
-    if(res == -1)
-        return -errno;
-
-    return 0;
-}
-
-static int hello_write(const char *path, const char *buf, size_t size,
-                     off_t offset)
-{
-    int fd;
-    int res;
-
-    fd = open(path, O_WRONLY);
-    if(fd == -1)
-        return -errno;
-
-    res = pwrite(fd, buf, size, offset);
-    if(res == -1)
-        res = -errno;
-    
-    close(fd);
-    return res;
-}
-
-
-static struct fuse_operations hello_oper = {
-	.getattr	= hello_getattr,
-	.getdir	= hello_getdir,
-	.readdir = hello_readdir,
-	.mkdir	= hello_mkdir,
-	.unlink	= hello_unlink,
-	.rmdir	= hello_rmdir,
-	.rename	= hello_rename,
-	.link	= hello_link,
-	.truncate	= hello_truncate,
-	.open	= hello_open,
-	.read	= hello_read,
-	.write	= hello_write
-    
+struct dir_struct {
+	int id;
+	int empty;
+	int parent_id;
+	char dir_name[255];
 };
 
-
-static void show_help(const char *progname)
+void* custom_init(struct fuse_conn_info *conn)
 {
-	printf("usage: %s [options] <mountpoint>\n\n", progname);
-	printf("File-system specific options:\n"
-	       "    --name=<s>          Name of the \"hello\" file\n"
-	       "                        (default: \"hello\")\n"
-	       "    --contents=<s>      Contents \"hello\" file\n"
-	       "                        (default \"Hello, World!\\n\")\n"
-	       "\n");
+	log_file = fopen("myfs.log", "wb");
+	FILE* file = fopen(FILENAME, "wb");
+	struct dir_struct ds;
+	int i;
+	ds.empty = 1;
+	ds.parent_id = -1;	
+	for (i = 0; i < DIR_AMOUNT; i++) {
+		ds.id = i;
+		fwrite(&ds, sizeof(struct dir_struct), 1, file);
+	}
+	fclose(file);
+	current_dir_amount = 0;
+	void* v = NULL;
+	return v;
 }
+
+void custom_destroy(void* private_data)
+{
+	fflush(log_file);
+	fclose(log_file);
+}
+
+int find(const char* dir, int parent)
+{
+	FILE* file = fopen(FILENAME, "rb");
+	if (file == NULL) {
+
+		return -2;
+	}
+	struct dir_struct ds;
+	memset(&ds, 0, sizeof(struct dir_struct));
+	while(!feof(file) && fread(&ds, sizeof(struct dir_struct), 1, file) > 0) {
+		if (ds.empty == 0 && ds.parent_id == parent && strcmp(ds.dir_name, dir) == 0) {
+			fclose(file);
+			return ds.id;
+		}
+	}
+	fclose(file);
+	return -2;
+}
+
+int find_child(struct dir_struct *child, int parent, int offset)
+{
+	FILE* file = fopen(FILENAME, "rb");
+	if (file == NULL) {
+		//fprintf(log_file, "\tCannot read file. Exit from find_child\n");
+		fflush(log_file);
+		return -2;
+	}
+	fseek(file, offset * sizeof(struct dir_struct), SEEK_SET);
+	memset(child, 0, sizeof(struct dir_struct));
+	int counter = 0;
+	while(!feof(file) && fread(child, sizeof(struct dir_struct), 1, file) > 0) {
+		counter ++;
+		if (counter % 50 == 0) {
+			//fprintf(log_file, "\tRead %d\n", counter);
+			fflush(log_file);
+		}
+		if (child->empty == 0 && child->parent_id == parent) {
+			//fprintf(log_file, "\tReturn %d\n", child->id);
+			fflush(log_file);
+			fclose(file);
+			return child->id + 1;
+		}
+	}
+	fclose(file);
+	//fprintf(log_file, "\tReturn -2\n");
+	fflush(log_file);
+	return -2;
+}
+
+int add(struct dir_struct *dir)
+{	
+	FILE* file = fopen(FILENAME, "rb+");
+	struct dir_struct ds;
+	memset(&ds, 0, sizeof(struct dir_struct));
+	while(!feof(file) && fread(&ds, sizeof(struct dir_struct), 1, file) > 0) {
+		if (ds.empty) {
+			fseek(file, ds.id * sizeof(struct dir_struct), SEEK_SET);
+			dir->id = ds.id;
+			fwrite(dir, sizeof(struct dir_struct), 1, file);
+			//fprintf(log_file, "!!!!Create dir with id: %d\n", dir->id);
+			fclose(file);
+			current_dir_amount = current_dir_amount + 1;
+			return ds.id;
+		}
+	}
+	//fprintf(log_file, "!!!!Cannot create dir \n");
+	fflush(log_file);
+	fclose(file);
+	return -2;
+}
+
+int delete(int id)
+{
+	FILE* file = fopen(FILENAME, "rb+");
+	if (file == NULL) {
+		//fprintf(log_file, "\tCannot read file. Exit from find_child\n");
+		fflush(log_file);
+		return -2;
+	}
+	struct dir_struct buf;
+	buf.id = id;
+	buf.empty = 1;
+	fseek(file, id * sizeof(struct dir_struct), SEEK_SET);
+	fwrite(&buf, sizeof(struct dir_struct), 1, file);
+	fclose(file);
+	//fprintf(log_file, "\tReturn 0\n");
+	fflush(log_file);
+	current_dir_amount = current_dir_amount - 1;
+	return 0;
+}
+
+int ren(struct dir_struct *dir)
+{
+	FILE* file = fopen(FILENAME, "rb+");
+	if (file == NULL) {
+		//fprintf(log_file, "\tCannot read file. Exit from find_child\n");
+		fflush(log_file);
+		return -2;
+	}
+	dir->empty = 0;
+	fseek(file, dir->id * sizeof(struct dir_struct), SEEK_SET);
+	fwrite(dir, sizeof(struct dir_struct), 1, file);
+	fclose(file);
+	//fprintf(log_file, "\tReturn 0\n");
+	fflush(log_file);
+	return 0;
+}
+
+int find_by_path(const char* path)
+{
+	char subdir[255];
+	char *endp = NULL;
+	int start = 1, end = 0, len = strlen(path), parent = -1, id = -1;
+	if (strcmp("/", path) == 0) {
+		return -1;
+	} else {
+		while(start <= len - 1) {
+			endp = strchr(path + start, '/');
+			if(endp == NULL) {
+				memset(subdir, 0, 255);
+				strcpy(subdir, path + start);
+				end = len - start;
+				
+			} else {
+				end = endp - path - start;
+				memset(subdir, 0, 255);
+				strncpy(subdir, path + start, end);
+			}
+			id = find(subdir, parent);
+			if (id < -1) {
+				return -2;
+			}
+			parent = id;
+			start = start + end + 1;
+		}	
+	}
+	return id;
+}
+
+int find_by_parent(const char* path, struct dir_struct *ds)
+{
+	char subdir[255];
+	char *endp = NULL;
+	int start = 1, end = 0, len = strlen(path), parent = -1, id = -1;
+	if (strcmp("/", path) == 0) {
+		fprintf(log_file, "\tExit from mkdir 1: return 0\n");
+		return -1;
+	} else {
+		while(start <= len - 1) {
+			endp = strchr(path + start, '/');
+			if(endp == NULL) {
+				memset(subdir, 0, 255);
+				strcpy(subdir, path + start);
+				break;
+			}
+			end = endp - path - start;
+			memset(subdir, 0, 255);
+			strncpy(subdir, path + start, end);
+			id = find(subdir, parent);
+			if (id < -1) {
+				return -2;
+			}
+			parent = id;
+			start = start + end + 1;
+		}	
+	}
+	ds->id = -2;
+	ds->parent_id = parent;
+	ds->empty = 0;
+	memset(ds->dir_name, 0, 255);
+	strcpy(ds->dir_name, subdir);
+	return 0;
+}
+
+static int custom_getattr(const char *path, struct stat *stbuf) {
+	fprintf(log_file, "\tEnter to getattr\n");
+	int len = strlen(path), id = -1;
+	memset(stbuf, 0, sizeof(struct stat));
+	fprintf(log_file, "\tgetattr path: %s\n", path);
+	fprintf(log_file, "path len: %d\n", len);
+	fflush(log_file);
+	id = find_by_path(path);
+	if (id < -1) {
+		return -ENOENT;
+	}
+	if (id == -1) {
+		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_nlink = 2;
+		fprintf(log_file, "\tExit from getattr1: return 0\n");
+		fflush(log_file);
+		return 0;
+	} 
+	stbuf->st_mode = S_IFDIR | 0777;
+    stbuf->st_nlink = 2;
+	fprintf(log_file, "\tExit from getattr2: return 0\n");
+	fflush(log_file);
+	return 0;
+}
+
+int custom_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+    off_t offset, struct fuse_file_info *fi)
+{
+	struct dir_struct ds;
+	int len = strlen(path), id = -1, ofst = 0;
+	//fprintf(log_file, "\treaddir path: %s\n", path);
+	//fprintf(log_file, "path len: %d\n", len);
+	id = find_by_path(path);
+	if (id < -1) {
+		return -ENOENT;
+	}
+	filler(buf, ".", NULL, 0);
+    filler(buf, "..", NULL, 0);
+    //fprintf(log_file, "\tStart filler\n");
+    while ((ofst = find_child(&ds, id, ofst)) > -1) {
+    	//fprintf(log_file, "\tWork filler %d\n", ofst);
+    	fflush(log_file);
+    	filler(buf, ds.dir_name, NULL, 0);
+    }
+    fflush(log_file);
+	return 0;
+}
+
+int custom_rmdir(const char* path)
+{
+	struct dir_struct ds;
+	int len = strlen(path), id = -1;
+	//fprintf(log_file, "-----readdir path: %s\n", path);
+	//fprintf(log_file, "path len: %d\n", len);
+	fflush(log_file);
+	id = find_by_path(path);
+	if (id < -1) {
+		return -ENOENT;
+	}
+	if (id == -1) {
+		return -EBUSY;
+	}
+	if (find_child(&ds, id, 0) > -1) {
+    	return -ENOTEMPTY;
+    }
+	delete(id);
+	return 0;
+}
+
+int custom_mkdir(const char* path, mode_t mode)
+{
+	if (current_dir_amount == DIR_AMOUNT) {
+		return -ENOSPC;
+	}
+	fprintf(log_file, "\tEnter to mkdir\n");
+	fflush(log_file);
+	struct dir_struct ds;
+	int len = strlen(path), res = 0;
+	fprintf(log_file, "\tmkdir path: %s\n", path);
+	fprintf(log_file, "path len: %d\n", len);
+	fflush(log_file);
+	res = find_by_parent(path, &ds);
+	if (res == -1) {
+		return 0;
+	}
+	if (res < -1) {
+		return -ENOENT;
+	}
+	fprintf(log_file, "\tAdd: %d\n", add(&ds));
+	fprintf(log_file, "\tExit from mkdir 2: return 0\n");
+	fflush(log_file);
+	return 0;
+}
+
+int custom_rename(const char* from, const char* to)
+{
+	struct dir_struct ds;
+	int from_id = -2, to_id = -2, res = 0;
+	if (strcmp(from, to) == 0) {
+		return 0;
+	}
+	from_id = find_by_path(from);
+	if (from_id == -1) {
+		return -EACCES;
+
+	}
+	if (from_id < -1) {
+		return -ENOENT;
+	}
+	to_id = find_by_path(to);
+	if (to_id == -1) {
+		return -EBUSY;
+	}
+	if (to_id > -1 && find_child(&ds, to_id, 0) > -1) {
+		return -ENOTEMPTY;
+	}
+	if (strstr(from, to) != NULL) {
+		return -EINVAL;
+	}
+	memset(&ds, 0, sizeof(struct dir_struct));
+	res = find_by_parent(to, &ds);
+	if (res < -1) {
+		return -ENOENT;
+	}
+	ds.id = from_id;
+	if (to_id > -1) {
+		delete(to_id);
+	}
+	ren(&ds);
+	return 0;
+}
+
+static struct fuse_operations fuse_lab_operations = {
+  .readdir = custom_readdir,
+  .getattr = custom_getattr,
+  .init = custom_init,
+  .rmdir = custom_rmdir,
+  .mkdir = custom_mkdir,
+  .rename = custom_rename,
+  .destroy = custom_destroy,
+};
 
 int main(int argc, char *argv[])
 {
-	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-
-	/* Set defaults -- we have to use strdup so that
-	   fuse_opt_parse can free the defaults if other
-	   values are specified */
-	options.filename = strdup("fhello");
-	options.contents = strdup("Hello World!\n");
-
-	/* Parse options */
-	if (fuse_opt_parse(&args, &options, option_spec, NULL) == -1)
-		return 1;
-
-	/* When --help is specified, first print our own file-system
-	   specific help text, then signal fuse_main to show
-	   additional help (by adding `--help` to the options again)
-	   without usage: line (by setting argv[0] to the empty
-	   string) */
-	if (options.show_help) {
-		show_help(argv[0]);
-		assert(fuse_opt_add_arg(&args, "--help") == 0);
-		args.argv[0] = (char*) "";
-	}
-
-	return fuse_main(args.argc, args.argv, &hello_oper, NULL);
+ 	return fuse_main(argc, argv, &fuse_lab_operations, NULL);
 }
