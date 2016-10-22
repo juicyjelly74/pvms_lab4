@@ -47,7 +47,7 @@ struct dir_struct {
 
 void* custom_init(struct fuse_conn_info *conn)
 {
-	log_file = fopen("logfile.log", "wb");
+	log_file = fopen("myfs.log", "wb");
 	FILE* file = fopen(FILENAME, "wb");
 	struct dir_struct ds;
 	int i;
