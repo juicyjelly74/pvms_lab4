@@ -12,23 +12,8 @@
 #include <unistd.h>
 #include <dirent.h>
 
-static struct options {
-	const char *filename;
-	const char *contents;
-	int show_help;
-} options;
-
 enum fuse_readdir_flags {
 	FUSE_READDIR_PLUS = (1 << 0),
-};
-#define OPTION(t, p)                           \
-    { t, offsetof(struct options, p), 1 }
-static const struct fuse_opt option_spec[] = {
-	OPTION("--name=%s", filename),
-	OPTION("--contents=%s", contents),
-	OPTION("-h", show_help),
-	OPTION("--help", show_help),
-	FUSE_OPT_END
 };
 
 #define FILENAME "/tmp/custom_fs"
@@ -272,7 +257,7 @@ int custom_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     off_t offset, struct fuse_file_info *fi)
 {
 	struct dir_struct ds;
-	int len = strlen(path), id = -1, ofst = 0;
+	int id = -1, ofst = 0;
 	//fprintf(log_file, "\treaddir path: %s\n", path);
 	//fprintf(log_file, "path len: %d\n", len);
 	id = find_by_path(path);
@@ -294,7 +279,7 @@ int custom_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 int custom_rmdir(const char* path)
 {
 	struct dir_struct ds;
-	int len = strlen(path), id = -1;
+	int id = -1;
 	//fprintf(log_file, "-----readdir path: %s\n", path);
 	//fprintf(log_file, "path len: %d\n", len);
 	fflush(log_file);

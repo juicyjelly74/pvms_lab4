@@ -18,76 +18,30 @@ path len: 12
 path len: 1
 	Exit from getattr1: return 0
 	Enter to getattr
+	getattr path: /.Trash
+path len: 7
+	Enter to getattr
+	getattr path: /.Trash-1000
+path len: 12
+	Enter to getattr
 	getattr path: /
 path len: 1
 	Exit from getattr1: return 0
 	Enter to getattr
-	getattr path: /a
-path len: 2
-	Enter to mkdir
-	mkdir path: /a
-path len: 2
-	Add: 0
-	Exit from mkdir 2: return 0
-	Enter to getattr
-	getattr path: /a
-path len: 2
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /a
-path len: 2
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /as
-path len: 3
-	Enter to mkdir
-	mkdir path: /as
-path len: 3
-	Add: 1
-	Exit from mkdir 2: return 0
-	Enter to getattr
-	getattr path: /as
-path len: 3
-	Exit from getattr2: return 0
+	getattr path: /
+path len: 1
+	Exit from getattr1: return 0
 	Enter to getattr
 	getattr path: /aa
 path len: 3
 	Enter to mkdir
 	mkdir path: /aa
 path len: 3
-	Add: 2
+	Add: 0
 	Exit from mkdir 2: return 0
 	Enter to getattr
 	getattr path: /aa
 path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /
-path len: 1
-	Exit from getattr1: return 0
-	Enter to getattr
-	getattr path: /aa
-path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /aa/a
-path len: 5
-	Enter to mkdir
-	mkdir path: /aa/a
-path len: 5
-	Add: 3
-	Exit from mkdir 2: return 0
-	Enter to getattr
-	getattr path: /aa/a
-path len: 5
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /aa
-path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /aa/a
-path len: 5
 	Exit from getattr2: return 0
 	Enter to getattr
 	getattr path: /
@@ -100,8 +54,96 @@ path len: 7
 	getattr path: /.Trash-1000
 path len: 12
 	Enter to getattr
-	getattr path: /a
-path len: 2
+	getattr path: /aa
+path len: 3
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /.hidden
+path len: 8
+	Enter to getattr
+	getattr path: /aaa
+path len: 4
+	Enter to mkdir
+	mkdir path: /aaa
+path len: 4
+	Add: 1
+	Exit from mkdir 2: return 0
+	Enter to getattr
+	getattr path: /aaa
+path len: 4
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /
+path len: 1
+	Exit from getattr1: return 0
+	Enter to getattr
+	getattr path: /.Trash
+path len: 7
+	Enter to getattr
+	getattr path: /.Trash-1000
+path len: 12
+	Enter to getattr
+	getattr path: /aaa
+path len: 4
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /
+path len: 1
+	Exit from getattr1: return 0
+	Enter to getattr
+	getattr path: /aa
+path len: 3
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /aa/aaaa
+path len: 8
+	Enter to mkdir
+	mkdir path: /aa/aaaa
+path len: 8
+	Add: 2
+	Exit from mkdir 2: return 0
+	Enter to getattr
+	getattr path: /aa/aaaa
+path len: 8
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /aa
+path len: 3
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /
+path len: 1
+	Exit from getattr1: return 0
+	Enter to getattr
+	getattr path: /.Trash
+path len: 7
+	Enter to getattr
+	getattr path: /.Trash-1000
+path len: 12
+	Enter to getattr
+	getattr path: /aa/aaaa
+path len: 8
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /aa/.hidden
+path len: 11
+	Enter to getattr
+	getattr path: /aa
+path len: 3
+	Exit from getattr2: return 0
+	Enter to getattr
+	getattr path: /
+path len: 1
+	Exit from getattr1: return 0
+	Enter to getattr
+	getattr path: /.Trash
+path len: 7
+	Enter to getattr
+	getattr path: /.Trash-1000
+path len: 12
+	Enter to getattr
+	getattr path: /aa
+path len: 3
 	Exit from getattr2: return 0
 	Enter to getattr
 	getattr path: /.hidden
@@ -111,54 +153,6 @@ path len: 8
 path len: 1
 	Exit from getattr1: return 0
 	Enter to getattr
-	getattr path: /as
-path len: 3
+	getattr path: /aaa
+path len: 4
 	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /aa
-path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /as
-path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /
-path len: 1
-	Exit from getattr1: return 0
-	Enter to getattr
-	getattr path: /.Trash
-path len: 7
-	Enter to getattr
-	getattr path: /.Trash-1000
-path len: 12
-	Enter to getattr
-	getattr path: /
-path len: 1
-	Exit from getattr1: return 0
-	Enter to getattr
-	getattr path: /.Trash
-path len: 7
-	Enter to getattr
-	getattr path: /.Trash-1000
-path len: 12
-	Enter to getattr
-	getattr path: /a
-path len: 2
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /
-path len: 1
-	Exit from getattr1: return 0
-	Enter to getattr
-	getattr path: /as
-path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /aa
-path len: 3
-	Exit from getattr2: return 0
-	Enter to getattr
-	getattr path: /
-path len: 1
-	Exit from getattr1: return 0
