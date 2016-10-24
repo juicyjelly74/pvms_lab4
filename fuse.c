@@ -58,7 +58,6 @@ int find(const char* dir, int parent)
 {
 	FILE* file = fopen(FILENAME, "rb");
 	if (file == NULL) {
-
 		return -2;
 	}
 	struct dir_struct ds;
@@ -265,14 +264,14 @@ int custom_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		return -ENOENT;
 	}
 	filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-    //fprintf(log_file, "\tStart filler\n");
-    while ((ofst = find_child(&ds, id, ofst)) > -1) {
-    	//fprintf(log_file, "\tWork filler %d\n", ofst);
+	filler(buf, "..", NULL, 0);
+	//fprintf(log_file, "\tStart filler\n");
+	while ((ofst = find_child(&ds, id, ofst)) > -1) {
+    		//fprintf(log_file, "\tWork filler %d\n", ofst);
+    		fflush(log_file);
+    		filler(buf, ds.dir_name, NULL, 0);
+    	}
     	fflush(log_file);
-    	filler(buf, ds.dir_name, NULL, 0);
-    }
-    fflush(log_file);
 	return 0;
 }
 
@@ -361,16 +360,16 @@ int custom_rename(const char* from, const char* to)
 }
 
 static struct fuse_operations fuse_lab_operations = {
-  .readdir = custom_readdir,
-  .getattr = custom_getattr,
-  .init = custom_init,
-  .rmdir = custom_rmdir,
-  .mkdir = custom_mkdir,
-  .rename = custom_rename,
-  .destroy = custom_destroy,
+	.readdir = custom_readdir,
+	.getattr = custom_getattr,
+	.init = custom_init,
+	.rmdir = custom_rmdir,
+	.mkdir = custom_mkdir,
+	.rename = custom_rename,
+	.destroy = custom_destroy,
 };
 
 int main(int argc, char *argv[])
 {
- 	return fuse_main(argc, argv, &fuse_lab_operations, NULL);
+	return fuse_main(argc, argv, &fuse_lab_operations, NULL);
 }
